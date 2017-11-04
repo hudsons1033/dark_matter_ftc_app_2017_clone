@@ -1,6 +1,7 @@
 package org.firstinspires.ftc.teamcode;//package com.qualcomm.ftcrobotcontroller.opmodes;
 
 import com.qualcomm.robotcore.hardware.DcMotor;
+import com.qualcomm.robotcore.hardware.Servo;
 import com.qualcomm.robotcore.util.Range;
 
 /**
@@ -8,6 +9,8 @@ import com.qualcomm.robotcore.util.Range;
  * Enables control of the robot movement via the game_pad.
  */
 public class Wheels {
+
+  boolean isOpen;
 
   private static double[] ScaleArray = {
     0.00, 0.05, 0.09, 0.10, 0.12, 0.15, 0.18, 0.24,
@@ -30,38 +33,73 @@ public class Wheels {
 
   private DcMotor motorLeft;
   private DcMotor motorRight;
+  private DcMotor motorEle;
+  private Servo servoLeft;
+  private Servo servoRight;
 
   private void setMotorMode(DcMotor.RunMode mode) {
     motorLeft.setMode(mode);
     motorRight.setMode(mode);
+    motorEle.setMode(mode);
   }
 
-  private void setPower(double left, double right) {
+  private void setPower(double left, double right, double ele, double servLeft, double servRight) {
     motorLeft.setPower(left);
     motorRight.setPower(right);
+    motorEle.setPower(ele);
+    servoLeft.setPosition(servLeft);
+    servoRight.setPosition(servRight);
   }
 
   public Wheels() { }
 
-  public void init(DcMotor left, DcMotor right) {
+  public void init(DcMotor left, DcMotor right, DcMotor ele, Servo servLeft, Servo servRight) {
     motorLeft  = left;
     motorRight = right;
+    motorEle = ele;
+    servoLeft = servLeft;
+    servoRight = servRight;
 
-    motorLeft.setDirection(DcMotor.Direction.FORWARD);
-    motorRight.setDirection(DcMotor.Direction.REVERSE);
+    motorLeft.setDirection(DcMotor.Direction.REVERSE);
+    motorRight.setDirection(DcMotor.Direction.FORWARD);
+    motorEle.setDirection(DcMotor.Direction.FORWARD);
+    servoLeft.setDirection(Servo.Direction.FORWARD);
+    servoRight.setDirection(Servo.Direction.REVERSE);
+
+    isOpen = true;
 
     setMotorMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
   }
 
-  public void start() { setPower(0.0, 0.0); }
-
-  // Movement inputs: -1 = full reverse, 1 = full forward.
-  public void move(double left, double right) {
-    double scaled_left  = ScaleInput(left);
-    double scaled_right = ScaleInput(right);
-    setPower(scaled_left, scaled_right);
+  public void start() {
+    setPower(0.0, 0.0, 0.0, 1, 1);
   }
 
-  public void stop() { setPower(0.0, 0.0); }
+  // Movement inputs: -1 = full reverse, 1 = full forward.
+  public void move(double left, double right, double ele, boolean bttnPush) {
+    double servMoveLeft;
+    double servMoveRight;
+    double scaled_left  = ScaleInput(left);
+    double scaled_right = ScaleInput(right);
+    double scaled_ele = ScaleInput(ele);
+
+    if (bttnPush) {
+      isOpen = !isOpen;
+    }
+
+    if (isOpen) {
+      servMoveLeft = 1;
+      servMoveRight = 1;
+    } else {
+      servMoveLeft = 0;
+      servMoveRight = 0;
+    }
+
+    setPower(scaled_left, scaled_right, scaled_ele, servMoveLeft, servMoveRight);
+  }
+
+  public void stop() {
+    setPower(0.0, 0.0, 0.0, 0.0, 0.0);
+  }
 
 } // Wheels
